@@ -30,6 +30,35 @@ const splitted = partTwoData.map((element) => {
 //     [5, 6, 7, 11],
 // ];
 
+// const splitted = [
+//     [7, 6, 4, 2, 1],
+//     [1, 2, 7, 8, 9],
+//     [9, 7, 6, 2, 1],
+//     [1, 3, 2, 4, 5],
+//     [8, 6, 4, 4, 1],
+//     [1, 3, 6, 7, 9],
+//     [1, 4, 2, 3, 5],
+//     [2, 4, 1, 3, 5],
+//     [2, 4, 1, 5, 6],
+//     [4, 2, 3, 5],
+//     [2, 1, 4, 5, 6, 10],
+//     [1, 5, 2, 3, 4],
+//     [1, 2, 5, 2, 3],
+//     [1, 5, 6, 7, 8],
+//     [1, 5, 6, 7, 11],
+//     [1, 2, 3, 7, 6],
+//     [1, 2, 3, 4, 5, 6, 7, 8],
+//     [1, 2, 4, 9, 8],
+//     [1, 2, 4, 9, 7],
+//     [1, 2, 4, 7, 11],
+//     [1, 2, 7, 8, 9],
+//     [1, 7, 2, 8, 9],
+//     [1, 7, 2, 3, 5],
+//     [1, 8, 2, 1, 5],
+//     [2, 1, 2, 3, 4, 5, 6],
+//     [6, 5, 4, 3, 2, 1, 2],
+// ];
+
 let passCount = 0;
 let failCount = 0;
 
@@ -42,42 +71,58 @@ splitted.forEach((element) => {
         return false;
     }
     let order = orderCount.asc > orderCount.desc ? "asc" : "desc";
-    // console.log(orderCount);
-    let failCounter = 0;
 
-    for (let index = 0; index < element.length; index++) {
-        if (!check(order, element[index], element[index + 1])) {
-            failCounter++;
-            if (!check(order, element[index], element[index + 2]) && !check(order, element[index + 1], element[index + 2])) {
-                failCounter++;
-            } else {
-                index++;
-            }
-            if (failCounter >= 2) {
-                failCount++;
-                console.log(element, "fail");
-                return false;
-            }
+    if (recursiveCheck(element, 0, 0, order)) {
+        console.log(element, "pass");
+        passCount++;
+    } else {
+        console.log(element, "fail");
+        failCount++;
+    }
+});
+
+function recursiveCheck(array, rIndex, passCounter, order) {
+    const modifiedArray = array.map((element) => element);
+    let tempCounter = 0;
+    if (rIndex === array.length) {
+        return false;
+    }
+    modifiedArray.splice(rIndex, 1);
+    for (let index = 0; index < modifiedArray.length - 1; index++) {
+        if (check(order, modifiedArray[index], modifiedArray[index + 1])) {
+            tempCounter += 1;
         }
     }
-    passCount++;
-    console.log(element, "pass");
-});
+    if (tempCounter === modifiedArray.length - 1) {
+        return true;
+    }
+
+    return recursiveCheck(array, rIndex + 1, passCounter, order);
+}
 
 console.log(passCount);
 console.log(failCount);
 
 function check(order, value, nextValue) {
     if (order === "asc") {
-        if (!ascCheck(value, nextValue) || !differenceCheck(value, nextValue)) {
+        if (ascCheck(value, nextValue)) {
+            if (differenceCheck(value, nextValue)) {
+                return true;
+            }
+            return false;
+        } else {
             return false;
         }
     } else {
-        if (!descCheck(value, nextValue) || !differenceCheck(value, nextValue)) {
+        if (descCheck(value, nextValue)) {
+            if (differenceCheck(value, nextValue)) {
+                return true;
+            }
+            return false;
+        } else {
             return false;
         }
     }
-    return true;
 }
 
 function differenceCheck(a, b) {
