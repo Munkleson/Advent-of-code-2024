@@ -9,14 +9,10 @@ data.forEach((element) => {
     for (let index = 0; index < split.length - 1; index++) {
         if (order === "asc") {
             if (!ascCheck(split[index], split[index + 1]) || !gtZero(split[index], split[index + 1]) || !ltFour(split[index], split[index + 1])) {
-                console.log(split);
-
                 return false;
             }
         } else {
             if (!descCheck(split[index], split[index + 1]) || !gtZero(split[index], split[index + 1]) || !ltFour(split[index], split[index + 1])) {
-                console.log(split);
-
                 return false;
             }
         }
