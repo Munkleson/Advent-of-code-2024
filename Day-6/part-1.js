@@ -29,6 +29,8 @@ let active = true;
 
 function move(table, cIndex, rIndex, direction) {
     // +1 for down and right, -1 for up and left
+    console.log(table);
+
     if (direction === "right") {
         table[cIndex][rIndex + 1] = "^";
         table[cIndex][rIndex] = "X";
