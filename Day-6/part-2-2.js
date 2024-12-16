@@ -34,6 +34,9 @@ const startY = mapData.findIndex((row) => {
     return row.includes("^");
 });
 
+let active = true;
+let counter = 0;
+
 // Pseudocode - Start with loop check only first
 
 //// Loop check logic
@@ -52,21 +55,33 @@ const startY = mapData.findIndex((row) => {
 
 // After a turn and before moving again, a blocker cannot be placed (so you don't go back the same way you just came from)
 
-const tempMap = mapData.map((element) => element);
+function removeA(mapData) {
+    mapData.map((rows) => {
+        rows.map((rowItem) => {
+            if (rowItem === "A") {
+                rowItem === ".";
+            }
+            return rowItem;
+        });
+    });
+}
 
 const directions = ["up", "right", "down", "left"];
 
 function startLoopCheck(map, startY, startX, dIndex) {
-    console.log(map);
+    const tempMap = map.map((element) => element);
+    if (!turnCheck(map, startY, startX, directions[dIndex])) {
+        // placeBlocker(tempMap, startY, startX, directions[dIndex]);
+        const blockerCoords = placeBlocker(tempMap, startY, startX, directions[dIndex]);
 
-    placeBlocker(map, startY, startX, directions[dIndex]);
-
-    const startCoordinates = recordCoordinates(startY, startX);
-    return recursiveMove(map, startY, startX, newDirections(dIndex), startCoordinates, 1); /// If it is true, it is a loop
+        const startCoordinates = recordCoordinates(startY, startX);
+        return recursiveMove(tempMap, startY, startX, newDirections(dIndex), startCoordinates, 1, blockerCoords); /// If it is true, it is a loop
+    }
 }
-console.log(startLoopCheck(tempMap, startY, startX, 3));
+// console.log(startLoopCheck(tempMap, startY, startX, 3));
 
-function recursiveMove(map, cIndex, rIndex, dIndex, startCoords, iteration) {
+function recursiveMove(map, cIndex, rIndex, dIndex, startCoords, iteration, blockerCoords) {
+    console.log(`Recursive [${cIndex},${rIndex}]`);
     // if you hit the end on the next loop of a move
     // - If the tile is the same as the startcoords, return true
     // - Else return false if any other condition is not met
@@ -83,9 +98,13 @@ function recursiveMove(map, cIndex, rIndex, dIndex, startCoords, iteration) {
         currentIteration++;
     }
 
-    if (blockerCheck(map, cIndex, rIndex, directions[dIndex])) {
+    // if (blockerCheck(map, cIndex, rIndex, directions[dIndex])) {
+    //     return true;
+    // }
+    if (blockerCheck(cIndex, rIndex, directions[dIndex], blockerCoords)) {
         return true;
     }
+
     if (edgeCheck(map, cIndex, rIndex, directions[dIndex])) {
         return false;
     }
@@ -95,13 +114,42 @@ function recursiveMove(map, cIndex, rIndex, dIndex, startCoords, iteration) {
         }
     }
     if (iteration === 4) {
-        if (turnCheck(map, cIndex, rIndex, directions[dIndex]) && !fourthIterationCheck(cIndex, rIndex, directions[dIndex], startCoords)) {
+        if (turnCheck(map, cIndex, rIndex, directions[dIndex]) && fourthIterationCheck(cIndex, rIndex, directions[dIndex], startCoords)) {
             return false;
         }
     }
+
     let nextCoords = newCoordinates(cIndex, rIndex, directions[tempDIndex]);
 
-    return recursiveMove(map, nextCoords[0], nextCoords[1], tempDIndex, startCoords, currentIteration);
+    return recursiveMove(map, nextCoords[0], nextCoords[1], tempDIndex, startCoords, currentIteration, blockerCoords);
+}
+
+function blockerCheck(cIndex, rIndex, direction, blockerCoords) {
+    console.log(cIndex, rIndex, direction, blockerCoords);
+
+    if (direction === "up" && cIndex - 1 === blockerCoords[0] && rIndex === blockerCoords[1]) {
+        return true;
+    } else if (direction === "right" && cIndex === blockerCoords[0] && rIndex + 1 === blockerCoords[1]) {
+        return true;
+    } else if (direction === "down" && cIndex + 1 === blockerCoords[0] && rIndex === blockerCoords[1]) {
+        return true;
+    } else if (direction === "left" && cIndex === blockerCoords[0] && rIndex - 1 === blockerCoords[1]) {
+        return true;
+    }
+    return false;
+}
+
+function edgeCheck(map, cIndex, rIndex, direction) {
+    if (direction === "up" && map[cIndex - 1][rIndex] === "O") {
+        return true;
+    } else if (direction === "right" && map[cIndex][rIndex + 1] === "O") {
+        return true;
+    } else if (direction === "down" && map[cIndex + 1][rIndex] === "O") {
+        return true;
+    } else if (direction === "left" && map[cIndex][rIndex - 1] === "O") {
+        return true;
+    }
+    return false;
 }
 
 function thirdIterationCheck(cIndex, rIndex, direction, startCoords) {
@@ -113,7 +161,7 @@ function thirdIterationCheck(cIndex, rIndex, direction, startCoords) {
     return true;
 }
 
-function thirdIterationCheck(cIndex, rIndex, direction, startCoords) {
+function fourthIterationCheck(cIndex, rIndex, direction, startCoords) {
     if ((direction === "up" || direction === "down") && rIndex !== startCoords[1]) {
         return false;
     } else if ((direction === "left" || direction === "right") && cIndex !== startCoords[0]) {
@@ -173,42 +221,70 @@ function turnCheck(map, cIndex, rIndex, direction) {
 
 function placeBlocker(map, cIndex, rIndex, direction) {
     if (direction === "up") {
-        map[cIndex - 1][rIndex] = "A";
+        // map[cIndex - 1][rIndex] = "A";
+        return [cIndex - 1, rIndex];
     } else if (direction === "right") {
-        map[cIndex][rIndex + 1] = "A";
+        // map[cIndex][rIndex + 1] = "A";
+        return [cIndex, rIndex + 1];
     } else if (direction === "down") {
-        map[cIndex + 1][rIndex] = "A";
+        // map[cIndex + 1][rIndex] = "A";
+        return [cIndex + 1, rIndex];
     } else if (direction === "left") {
-        map[cIndex][rIndex - 1] = "A";
+        // map[cIndex][rIndex - 1] = "A";
+        return [cIndex, rIndex - 1];
     }
 }
 
-function blockerCheck(map, cIndex, rIndex, direction) {
-    if (direction === "up" && map[cIndex - 1][rIndex] === "A") {
-        return true;
-    } else if (direction === "right" && map[cIndex][rIndex + 1] === "A") {
-        return true;
-    } else if (direction === "down" && map[cIndex + 1][rIndex] === "A") {
-        return true;
-    } else if (direction === "left" && map[cIndex][rIndex - 1] === "A") {
-        return true;
-    }
-    return false;
-}
-
-function edgeCheck(map, cIndex, rIndex, direction) {
-    if (direction === "up" && map[cIndex - 1][rIndex] === "O") {
-        return true;
-    } else if (direction === "right" && map[cIndex][rIndex + 1] === "O") {
-        return true;
-    } else if (direction === "down" && map[cIndex + 1][rIndex] === "O") {
-        return true;
-    } else if (direction === "left" && map[cIndex][rIndex - 1] === "O") {
-        return true;
-    }
-    return false;
-}
+// function blockerCheck(map, cIndex, rIndex, direction) {
+//     if (direction === "up" && map[cIndex - 1][rIndex] === "A") {
+//         return true;
+//     } else if (direction === "right" && map[cIndex][rIndex + 1] === "A") {
+//         return true;
+//     } else if (direction === "down" && map[cIndex + 1][rIndex] === "A") {
+//         return true;
+//     } else if (direction === "left" && map[cIndex][rIndex - 1] === "A") {
+//         return true;
+//     }
+//     return false;
+// }
 
 function recordCoordinates(cIndex, rIndex) {
     return [cIndex, rIndex];
 }
+
+let shouldLoop = true;
+
+function move(map, cIndex, rIndex, dIndex) {
+    console.log(`Normal move: ${[cIndex, rIndex, directions[dIndex]]}`);
+    removeA(map);
+    if (edgeCheck(map, cIndex, rIndex, directions[dIndex])) {
+        active = false;
+        return false;
+    }
+    if (shouldLoop) {
+        if (startLoopCheck(map, cIndex, rIndex, dIndex)) {
+            console.log("Loop here!");
+            counter++;
+            shouldLoop = false;
+            console.log(counter);
+        }
+    }
+
+    let tempDIndex = dIndex;
+
+    if (turnCheck(map, cIndex, rIndex, directions[dIndex])) {
+        tempDIndex = newDirections(dIndex);
+        shouldLoop = true;
+    }
+
+    let nextCoords = newCoordinates(cIndex, rIndex, directions[tempDIndex]);
+
+    return move(map, nextCoords[0], nextCoords[1], tempDIndex);
+}
+
+move(mapData, startY, startX, 0);
+
+console.log(counter);
+
+///// Issue right now is option 5 of the tests. 
+///// I misunderstood the exercise. As long as it hits the original spot, it can loop as many times as it wants
